@@ -113,6 +113,15 @@ const PlayerControls = ({
 			<button className="play-pause-btn" onClick={onPlayPause} title={isPlaying ? "Pause" : "Play"}>
 				{isPlaying ? <PauseIcon /> : <PlayIcon />}
 			</button>
+			{playbackRate !== undefined && onCyclePlaybackRate && (
+				<button
+					className="speed-btn"
+					onClick={onCyclePlaybackRate}
+					title={`Playback speed: ${formatPlaybackRate(playbackRate)} (click to change)`}
+				>
+					{formatPlaybackRate(playbackRate)}
+				</button>
+			)}
 			{senderID && senderName && senderAvatarURL && (
 				<div className="sender-info" onClick={handleTrackInfoClick}>
 					<img
@@ -134,15 +143,6 @@ const PlayerControls = ({
 				<div ref={progressBarRef} className="progress-bar" />
 			</div>
 			<span ref={durationRef} className="time">{formatTime(initialDuration)}</span>
-			{playbackRate !== undefined && onCyclePlaybackRate && (
-				<button
-					className="speed-btn"
-					onClick={onCyclePlaybackRate}
-					title={`Playback speed: ${formatPlaybackRate(playbackRate)} (click to change)`}
-				>
-					{formatPlaybackRate(playbackRate)}
-				</button>
-			)}
 			{onClose && (
 				<button className="close-btn" onClick={onClose} title="Close">
 					<CloseIcon />
