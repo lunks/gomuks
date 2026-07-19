@@ -16,7 +16,9 @@
 export { default as AudioPlayer } from "./AudioPlayer.tsx"
 export { default as PlayerControls } from "./PlayerControls.tsx"
 export {
-	INITIAL_AUDIO_PLAYER_STATE, calculateClickPercent, default as AudioPlayerContext, useAudioPlayer,
+	DEFAULT_PLAYBACK_RATE, INITIAL_AUDIO_PLAYER_STATE, PLAYBACK_RATES, calculateClickPercent,
+	default as AudioPlayerContext, formatPlaybackRate, loadPlaybackRate, nextPlaybackRate,
+	savePlaybackRate, useAudioPlayer,
 } from "./AudioPlayerContext.ts"
 export type { AudioMetadata, AudioPlayerContextFields, AudioPlayerState } from "./AudioPlayerContext.ts"
 export { useAudioAnimation } from "./useProgressBarAnimation.ts"

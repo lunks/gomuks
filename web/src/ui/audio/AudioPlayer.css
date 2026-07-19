@@ -92,6 +92,16 @@ div.global-audio-player {
 		}
 	}
 
+	> button.speed-btn {
+		width: auto;
+		min-width: 2.75rem;
+		padding: 0 .375rem;
+		border-radius: .25rem;
+		font-size: 0.8rem;
+		font-variant-numeric: tabular-nums;
+		color: var(--secondary-text-color);
+	}
+
 	> span.time {
 		font-size: 0.8rem;
 		color: var(--secondary-text-color);

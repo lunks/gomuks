@@ -18,7 +18,7 @@ import { getAvatarThumbnailURL, getUserColorIndex } from "@/api/media.ts"
 import type { MemDBEvent } from "@/api/types"
 import { formatTime } from "@/util/time.ts"
 import { getDisplayname } from "@/util/validation.ts"
-import { calculateClickPercent } from "./AudioPlayerContext.ts"
+import { calculateClickPercent, formatPlaybackRate } from "./AudioPlayerContext.ts"
 import { useAudioAnimation } from "./useProgressBarAnimation.ts"
 import CloseIcon from "@/icons/close.svg?react"
 import PauseIcon from "@/icons/pause.svg?react"
@@ -39,6 +39,10 @@ interface PlayerControlsProps {
 	roomName?: string | null
 	onClose?: () => void
 
+	// Playback speed (shared across all audio, so both players stay in sync)
+	playbackRate?: number
+	onCyclePlaybackRate?: () => void
+
 	// Styling
 	className?: string
 	style?: React.CSSProperties
@@ -55,6 +59,8 @@ const PlayerControls = ({
 	senderMemberEvent,
 	roomName,
 	onClose,
+	playbackRate,
+	onCyclePlaybackRate,
 	className,
 	style,
 }: PlayerControlsProps) => {
@@ -128,6 +134,15 @@ const PlayerControls = ({
 				<div ref={progressBarRef} className="progress-bar" />
 			</div>
 			<span ref={durationRef} className="time">{formatTime(initialDuration)}</span>
+			{playbackRate !== undefined && onCyclePlaybackRate && (
+				<button
+					className="speed-btn"
+					onClick={onCyclePlaybackRate}
+					title={`Playback speed: ${formatPlaybackRate(playbackRate)} (click to change)`}
+				>
+					{formatPlaybackRate(playbackRate)}
+				</button>
+			)}
 			{onClose && (
 				<button className="close-btn" onClick={onClose} title="Close">
 					<CloseIcon />

@@ -84,6 +84,8 @@ const AudioMessage = ({
 			isActive={isThisTrack}
 			duration={initialDurationSec}
 			onSeek={handleSeek}
+			playbackRate={audioPlayer.playbackRate}
+			onCyclePlaybackRate={audioPlayer.cyclePlaybackRate}
 			className="audio-message-player"
 		/>
 	)
