@@ -15,10 +15,10 @@ const makeLocalStorage = () => {
 
 suite("nextPlaybackRate", () => {
 	test("cycles through every rate in order", () => {
-		let rate = PLAYBACK_RATES[0]
-		const seen = [rate]
+		let rate: number = PLAYBACK_RATES[0]
+		const seen: number[] = [rate]
 		for (let i = 0; i < PLAYBACK_RATES.length - 1; i++) {
-			rate = nextPlaybackRate(rate) as typeof PLAYBACK_RATES[number]
+			rate = nextPlaybackRate(rate)
 			seen.push(rate)
 		}
 		expect(seen).toEqual([...PLAYBACK_RATES])
