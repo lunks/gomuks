@@ -15,7 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import { useCallback, useMemo, useRef, useState } from "react"
 import type { AudioMetadata, AudioPlayerContextFields } from "./AudioPlayerContext.ts"
-import AudioPlayerContext, { INITIAL_AUDIO_PLAYER_STATE } from "./AudioPlayerContext.ts"
+import AudioPlayerContext, {
+	INITIAL_AUDIO_PLAYER_STATE, loadPlaybackRate, nextPlaybackRate, savePlaybackRate,
+} from "./AudioPlayerContext.ts"
 import PlayerControls from "./PlayerControls.tsx"
 import "./AudioPlayer.css"
 
@@ -30,6 +32,22 @@ const AudioPlayer = ({ children, roomListWidth, rightPanelWidth }: AudioPlayerPr
 	const audioRef = useRef<HTMLAudioElement | null>(null)
 	const [globalPlayerRevealed, setGlobalPlayerRevealed] = useState(false)
 	const showGlobalPlayer = state.mediaURL !== null && globalPlayerRevealed
+	// Kept in a ref as well so play() can apply it to newly created audio elements without
+	// having to be recreated whenever the rate changes.
+	const [playbackRate, setPlaybackRate] = useState(loadPlaybackRate)
+	const playbackRateRef = useRef(playbackRate)
+	playbackRateRef.current = playbackRate
+
+	const cyclePlaybackRate = useCallback(() => {
+		setPlaybackRate(current => {
+			const next = nextPlaybackRate(current)
+			savePlaybackRate(next)
+			if (audioRef.current) {
+				audioRef.current.playbackRate = next
+			}
+			return next
+		})
+	}, [])
 
 	const revealGlobalPlayer = useCallback(() => setGlobalPlayerRevealed(true), [])
 
@@ -37,6 +55,7 @@ const AudioPlayer = ({ children, roomListWidth, rightPanelWidth }: AudioPlayerPr
 
 	const play = useCallback((mediaURL: string, metadata?: AudioMetadata) => {
 		if (audioRef.current && audioRef.current.src === mediaURL) {
+			audioRef.current.playbackRate = playbackRateRef.current
 			audioRef.current.play()
 			return
 		}
@@ -47,6 +66,7 @@ const AudioPlayer = ({ children, roomListWidth, rightPanelWidth }: AudioPlayerPr
 		}
 
 		const audio = new Audio(mediaURL)
+		audio.playbackRate = playbackRateRef.current
 		audioRef.current = audio
 
 		const cleanupAudioHandlers = () => {
@@ -58,6 +78,8 @@ const AudioPlayer = ({ children, roomListWidth, rightPanelWidth }: AudioPlayerPr
 		}
 
 		audio.onloadedmetadata = () => {
+			// Re-apply in case the browser reset the rate while loading the source
+			audio.playbackRate = playbackRateRef.current
 			setState(s => ({ ...s, duration: audio.duration }))
 		}
 
@@ -105,6 +127,9 @@ const AudioPlayer = ({ children, roomListWidth, rightPanelWidth }: AudioPlayerPr
 	}, [])
 
 	const resume = useCallback(() => {
+		if (audioRef.current) {
+			audioRef.current.playbackRate = playbackRateRef.current
+		}
 		audioRef.current?.play()?.catch((error: Error) => {
 			console.error("Failed to resume audio:", error.name, error.message)
 		})
@@ -134,7 +159,12 @@ const AudioPlayer = ({ children, roomListWidth, rightPanelWidth }: AudioPlayerPr
 		close,
 		getAudioElement,
 		revealGlobalPlayer,
-	}), [state, play, pause, resume, seek, close, getAudioElement, revealGlobalPlayer])
+		playbackRate,
+		cyclePlaybackRate,
+	}), [
+		state, play, pause, resume, seek, close, getAudioElement, revealGlobalPlayer,
+		playbackRate, cyclePlaybackRate,
+	])
 
 	return (
 		<AudioPlayerContext value={contextValue}>
@@ -151,6 +181,8 @@ const AudioPlayer = ({ children, roomListWidth, rightPanelWidth }: AudioPlayerPr
 					senderMemberEvent={state.metadata?.senderMemberEvent}
 					roomName={state.metadata?.roomName}
 					onClose={close}
+					playbackRate={playbackRate}
+					onCyclePlaybackRate={cyclePlaybackRate}
 					className="global-audio-player"
 					style={{
 						"--room-list-width": `${roomListWidth}px`,

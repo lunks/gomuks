@@ -42,6 +42,40 @@ export const INITIAL_AUDIO_PLAYER_STATE: AudioPlayerState = {
 	metadata: null,
 }
 
+// Playback speed is deliberately global: it applies to every audio message and persists across
+// reloads, so you don't have to re-pick it for each voice message.
+export const PLAYBACK_RATES = [1, 1.25, 1.5, 1.75, 2] as const
+
+export const DEFAULT_PLAYBACK_RATE = 1
+
+const PLAYBACK_RATE_KEY = "gomuks.audio.playbackRate"
+
+export const loadPlaybackRate = (): number => {
+	try {
+		const stored = Number(localStorage.getItem(PLAYBACK_RATE_KEY))
+		return PLAYBACK_RATES.includes(stored as typeof PLAYBACK_RATES[number]) ? stored : DEFAULT_PLAYBACK_RATE
+	} catch {
+		// localStorage can throw in private mode / with storage disabled
+		return DEFAULT_PLAYBACK_RATE
+	}
+}
+
+export const savePlaybackRate = (rate: number) => {
+	try {
+		localStorage.setItem(PLAYBACK_RATE_KEY, String(rate))
+	} catch {
+		// Not being able to persist the rate shouldn't break playback
+	}
+}
+
+export const nextPlaybackRate = (rate: number): number => {
+	const idx = PLAYBACK_RATES.indexOf(rate as typeof PLAYBACK_RATES[number])
+	return PLAYBACK_RATES[(idx + 1) % PLAYBACK_RATES.length]
+}
+
+// 1 -> "1×", 1.25 -> "1.25×"
+export const formatPlaybackRate = (rate: number): string => `${rate}×`
+
 export interface AudioPlayerContextFields {
 	state: AudioPlayerState
 	play: (mediaURL: string, metadata?: AudioMetadata) => void
@@ -51,6 +85,8 @@ export interface AudioPlayerContextFields {
 	close: () => void
 	getAudioElement: () => HTMLAudioElement | null
 	revealGlobalPlayer: () => void
+	playbackRate: number
+	cyclePlaybackRate: () => void
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextFields | null>(null)
