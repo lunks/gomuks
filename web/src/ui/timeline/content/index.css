@@ -283,6 +283,11 @@ div.media-container {
 
 	> video {
 		width: 100%;
+		/* Dia doesn't hit-test the video unless it gets its own paint layer, which makes the
+		   built-in controls unclickable. Promoting it here is a no-op in other browsers. */
+		display: block;
+		position: relative;
+		z-index: 1;
 	}
 }
 
