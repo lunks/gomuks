@@ -19,6 +19,7 @@ import type { EventType, MediaMessageEventContent } from "@/api/types"
 import { ImageContainerSize, calculateMediaSize, defaultVideoContainerSize } from "@/util/mediasize.ts"
 import { ensureString } from "@/util/validation.ts"
 import { LightboxContext } from "../../modal"
+import { useVideoPoster } from "./useVideoPoster.ts"
 import DownloadIcon from "@/icons/download.svg?react"
 
 export const useMediaContent = (
@@ -32,6 +33,8 @@ export const useMediaContent = (
 	const thumbnailURL = content.info?.thumbnail_file?.url
 		? getEncryptedMediaURL(content.info.thumbnail_file.url) : getMediaURL(content.info?.thumbnail_url)
 	const [errored, setErrored] = useState(false)
+	// Bridges don't always send a video thumbnail, in which case grab a frame from the video itself
+	const [generatedPoster, videoPosterRef] = useVideoPoster(mediaURL, content.msgtype === "m.video" && !thumbnailURL)
 	if (content.msgtype === "m.image" || content.msgtype === "m.sticker" || evtType === "m.sticker") {
 		const style = calculateMediaSize(content.info?.w, content.info?.h, containerSize)
 		return [<img
@@ -64,12 +67,13 @@ export const useMediaContent = (
 			}
 		}
 		return [<video
+			ref={videoPosterRef}
 			autoPlay={autoplay && muted}
 			controls={controls || !muted}
 			style={style.media}
 			loop={loop}
 			muted={muted}
-			poster={thumbnailURL}
+			poster={thumbnailURL ?? generatedPoster}
 			onMouseOver={onMouseOver}
 			onMouseOut={onMouseOut}
 			preload={autoplay ? "auto" : "none"}
