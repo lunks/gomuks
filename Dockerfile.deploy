@@ -1,0 +1,23 @@
+# Build gomuks (web + server) from source and package it like the upstream CI image.
+FROM golang:1.26-alpine AS builder
+
+RUN apk add --no-cache git nodejs npm build-base
+
+WORKDIR /build
+COPY . .
+
+# stdcommands.json + the wasm bundle are generated artifacts the frontend build needs
+RUN cd web && go run ../pkg/hicli/cmdspec/print src/api/types/stdcommands.json src/api/types/stdcommands.d.ts
+RUN cd web && sh build-wasm.sh
+RUN cd web && npm ci --include=dev && npm run build
+
+# goolm keeps us off libolm; cgo stays on because the sqlite driver needs it
+RUN CGO_ENABLED=1 go build -tags "goolm sqlite_fts5" -ldflags "-X go.mau.fi/gomuks/version.Commit=$(git rev-parse HEAD 2>/dev/null || echo unknown)" -o /gomuks ./cmd/gomuks
+
+FROM alpine:3.24
+RUN apk add --no-cache ca-certificates jq curl ffmpeg
+COPY --from=builder /gomuks /usr/bin/gomuks
+VOLUME /data
+WORKDIR /data
+ENV GOMUKS_ROOT=/data
+CMD ["/usr/bin/gomuks"]
