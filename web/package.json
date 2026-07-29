@@ -13,7 +13,9 @@
 		"test": "vitest --run"
 	},
 	"dependencies": {
+		"@dnd-kit/core": "^6.3.1",
 		"@dnd-kit/sortable": "^10.0.0",
+		"@dnd-kit/utilities": "^3.2.2",
 		"@element-hq/element-call-embedded": "^0.21.0",
 		"@sqlite.org/sqlite-wasm": "3.53.0-build1",
 		"@streamparser/json-whatwg": "^0.0.22",
