@@ -54,6 +54,12 @@ export const preferences = {
 		allowedContexts: anyContext,
 		defaultValue: true,
 	}),
+	auto_load_url_previews: new Preference<boolean>({
+		displayName: "Auto-load URL previews",
+		description: "Should the composer fetch URL previews automatically instead of waiting for the load button to be clicked?",
+		allowedContexts: anyContext,
+		defaultValue: true,
+	}),
 	display_read_receipts: new Preference<boolean>({
 		displayName: "Display read receipts",
 		description: "Should read receipts be rendered in the timeline?",

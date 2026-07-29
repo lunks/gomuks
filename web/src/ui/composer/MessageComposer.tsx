@@ -174,6 +174,7 @@ const MessageComposer = () => {
 	const composerRef = useRef<HTMLDivElement>(null)
 	const textRows = useRef(1)
 	const typingSentAt = useRef(0)
+	const failedPreviews = useRef<Set<string>>(new Set())
 	const replyToEvt = useRoomEvent(room, state.replyTo)
 	const tombstoneEvent = useRoomState(room, "m.room.tombstone", "")
 	const createEvent = useRoomState(room, "m.room.create", "")
@@ -711,6 +712,7 @@ const MessageComposer = () => {
 			})
 			.catch(err => {
 				console.error("Error fetching preview for URL", url, err)
+				failedPreviews.current.add(url)
 				setState(s => ({
 					loadingPreviews: s.loadingPreviews.filter(u => u !== url),
 				}))
@@ -790,6 +792,21 @@ const MessageComposer = () => {
 			possiblePreviews: urls,
 		}))
 	}, [room.preferences, state.uninited, state.text])
+	useEffect(() => {
+		if (!room.preferences.send_bundled_url_previews || !room.preferences.auto_load_url_previews) {
+			return
+		}
+		const pending = state.possiblePreviews.filter(url =>
+			!state.loadingPreviews.includes(url)
+			&& !state.previews.some(p => p.matched_url === url)
+			&& !failedPreviews.current.has(url))
+		if (!pending.length) {
+			return
+		}
+		// Debounced so half-typed URLs aren't fetched; failed URLs keep the manual load button
+		const timeout = setTimeout(() => pending.forEach(resolvePreview), 800)
+		return () => clearTimeout(timeout)
+	}, [room.preferences, state.possiblePreviews, state.previews, state.loadingPreviews, resolvePreview])
 	const clearMedia = useCallback(() => setState({ media: null, location: null }), [])
 	const onChangeLocation = useCallback((location: ComposerLocationValue) => setState({ location }), [])
 	const closeReply = useCallback((evt: React.MouseEvent) => {
